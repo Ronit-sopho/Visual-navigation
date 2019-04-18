@@ -105,10 +105,10 @@ while(True):
 
 	res = [output.get() for p in post]
 	for r in res:
-		if type(r)==type({}):
-			distance_to_objects=r
+		if type(r) == type({}):
+			distance_to_objects = r
 		else:
-			frame=r
+			frame = r
 	# distance_to_objects = getDistance(frame, results)
 	font = cv2.FONT_HERSHEY_SIMPLEX
 	for k in distance_to_objects.keys():
