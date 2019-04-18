@@ -1,14 +1,6 @@
 from __future__ import print_function
 
 import numpy as np
-# import matplotlib.pyplot as plt
-# from matplotlib import rc
-# from IPython.display import HTML
-
-#
-# plt.rcParams['figure.figsize'] = (15,12)
-# plt.rcParams['image.interpolation'] = 'nearest'
-# plt.rcParams['image.cmap'] = 'gray'
 
 from detect import *
 from utils import convert_to_original_size
@@ -26,10 +18,12 @@ detection_object = Detector()
 
 
 def load_images(path):
+
 	getFrames = []
 	for imgs in sorted(os.listdir(path)):
 		getFrames.append(Image.open(os.path.join(path, imgs)))
 	return getFrames
+
 
 def SingleTracker(trackerObject, vid_frame, output):
 
@@ -40,10 +34,13 @@ def SingleTracker(trackerObject, vid_frame, output):
 	if(ret):
 		output.put(bbox)
 
-
+# Path if frames are to be used instead of video
 path = 'test_images/data'
 
+# Get handle for frames
 cap = cv2.VideoCapture('input_video.mp4')
+
+# Counter for frames
 i=0
 
 while(True):
@@ -80,7 +77,6 @@ while(True):
 					continue
 
 	else:
-
 		threads = [threading.Thread(target=SingleTracker, args=(trck, frame, output,)) for trck in trackers]
 		for t in threads:
 			t.start()
@@ -97,7 +93,6 @@ while(True):
 			# print([p1,p2])
 		# frame = cv2_image
 
-	# frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
 	output = mp.Queue()
 	thread_distance = threading.Thread(target=getDistance, args=(frame, results, output,))
 	thread_segment = threading.Thread(target=road_segmentation, args=(frame, output,))
@@ -122,7 +117,8 @@ while(True):
 		cv2.line(frame, (midpoint_x, midpoint_y), (midpoint_x, H), (255,0,0), 5)
 		cv2.putText(frame, str(k)[:4]+' meters',(midpoint_x,int((midpoint_y+H)/2)), font, 1, (255,0,0), 7, cv2.LINE_AA)
 
-	# frame = road_segmentation(frame)
+
+	frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
 	cv2.imshow("Tracking", frame)
 	i+=1
 	k = cv2.waitKey(1) & 0xff
