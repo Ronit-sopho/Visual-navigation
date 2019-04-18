@@ -23,7 +23,7 @@ def getDistance(input_image, object_boxes):
     # get the transformed image
     warped_img = cv2.warpPerspective(input_image.copy(), M, (W,H))
     # write intermdiate ouput
-    cv2.imwrite('ipm_image.jpg', warped_img)
+    cv2.imwrite('output/ipm_image.jpg', warped_img)
 
     # dictionary containing distances
     distance = {}

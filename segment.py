@@ -13,7 +13,7 @@ def road_segmentation(input_image):
     ii_image = 0.5 + np.log(inp_img[:,:,1]) - alpha*np.log(inp_img[:,:,2]) - (1-alpha)*np.log(inp_img[:,:,0])
     ii_image = 255*ii_image
     # Write the intermdiate output
-    cv2.imwrite('ii_image.jpg', ii_image)
+    cv2.imwrite('output/ii_image.jpg', ii_image)
 
     # Perform Road Segmentation by thresholding and masking the illuminaiton invariant Image
     ret, thresh = cv2.threshold(ii_image, 120, 150, cv2.THRESH_BINARY)
