@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def getDistance(input_image, object_boxes):
+def getDistance(input_image, object_boxes, output):
 
     # Get a bird's eye view of the image
     # H = height
@@ -39,4 +39,5 @@ def getDistance(input_image, object_boxes):
             dist = ((H - skewed_box[1])/130)*3
             distance[dist] = box
 
-    return distance
+    # return distance
+    output.put(distance)

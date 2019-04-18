@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def road_segmentation(input_image):
+def road_segmentation(input_image, output):
 
     # Create a copy of the image and reorder its array to RGB
     inp_img = input_image.copy()
@@ -56,4 +56,5 @@ def road_segmentation(input_image):
     # Write the output of segmentation for each frame
     cv2.imwrite('res.jpg', result)
 
-    return result
+    # return result
+    output.put(result)
