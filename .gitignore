@@ -1,0 +1,7 @@
+# Folders to be ignored
+output/
+test_images/
+saved_model/
+
+# Type of files to ignore
+*.mp4
