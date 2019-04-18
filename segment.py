@@ -54,7 +54,7 @@ def road_segmentation(input_image, output):
     result = cv2.addWeighted(undist, 1, mask, 0.3, 0)
 
     # Write the output of segmentation for each frame
-    cv2.imwrite('res.jpg', result)
+    cv2.imwrite('output/res.jpg', result)
 
     # return result
     output.put(result)

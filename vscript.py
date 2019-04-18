@@ -109,13 +109,13 @@ while(True):
 			distance_to_objects = r
 		else:
 			frame = r
-	# distance_to_objects = getDistance(frame, results)
+
 	font = cv2.FONT_HERSHEY_SIMPLEX
 	for k in distance_to_objects.keys():
 		midpoint_x = int(distance_to_objects[k][0]+distance_to_objects[k][2]/2)
 		midpoint_y = int(distance_to_objects[k][1]+distance_to_objects[k][3])
-		cv2.line(frame, (midpoint_x, midpoint_y), (midpoint_x, H), (255,0,0), 5)
-		cv2.putText(frame, str(k)[:4]+' meters',(midpoint_x,int((midpoint_y+H)/2)), font, 1, (255,0,0), 7, cv2.LINE_AA)
+		# cv2.line(frame, (midpoint_x, midpoint_y), (midpoint_x, H), (255,0,0), 5)
+		cv2.putText(frame, str(k)[:4]+' meters',(midpoint_x,midpoint_y+3), font, 1, (255,0,0), 7, cv2.LINE_AA)
 
 
 	frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
