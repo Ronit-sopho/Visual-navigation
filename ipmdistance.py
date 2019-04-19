@@ -10,7 +10,7 @@ def getDistance(input_image, object_boxes, output):
     H,W,C = input_image.shape
 
     # define the image slicing parameter (ROI)
-    s = 430 # works best for our images
+    s = 625 # works best for our images
 
     # define the perspective points and their mapping
     source  = np.float32([[0,H],[W,H],[0,s],[W,s]])

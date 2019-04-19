@@ -3,8 +3,7 @@ from __future__ import print_function
 import numpy as np
 
 from detect import *
-from utils import convert_to_original_size
-from skimage.color import rgb2gray
+from findObjects import Locator
 
 import cv2
 import multiprocessing as mp
@@ -16,30 +15,30 @@ from ipmdistance import getDistance
 tf.reset_default_graph()
 detection_object = Detector()
 
+locate = Locator()
 
-def load_images(path):
+# def load_images(path):
+#
+# 	getFrames = []
+# 	for imgs in sorted(os.listdir(path)):
+# 		getFrames.append(Image.open(os.path.join(path, imgs)))
+# 	return getFrames
 
-	getFrames = []
-	for imgs in sorted(os.listdir(path)):
-		getFrames.append(Image.open(os.path.join(path, imgs)))
-	return getFrames
 
-
-def SingleTracker(trackerObject, vid_frame, output):
-
-	try:
-		ret, bbox = trackerObject.update(vid_frame)
-	except:
-		pass
-	if(ret):
-		output.put(bbox)
+# def SingleTracker(trackerObject, vid_frame, output):
+#
+# 	try:
+# 		ret, bbox = trackerObject.update(vid_frame)
+# 	except:
+# 		pass
+# 	if(ret):
+# 		output.put(bbox)
 
 # Path if frames are to be used instead of video
-path = 'test_images/data'
+# path = 'test_images/data'
 
 # Get handle for frames
-cap = cv2.VideoCapture('input_video.mp4')
-
+cap = cv2.VideoCapture('campusvideo2.mp4')
 # Counter for frames
 i=0
 
@@ -47,51 +46,15 @@ while(True):
 
 	ret, frame = cap.read()
 	H,W,C = frame.shape
-	pilImage = Image.fromarray(frame)
+	# pilImage = Image.fromarray(frame)
+	orgFrame = frame.copy()
 	print(i)
+
 	if(i%10==0):
-		pil_image, bounding_boxes = detection_object.infer(pilImage)
-		# print(np.array(pil_image).shape)
-		frame = np.asarray(pil_image)
-		roi_list = []
-		for cls, bboxes in bounding_boxes.items():
-			for box, score in bboxes:
-				if(np.all(box>0)):
-					roi_list.append(box)
-
-		ntrackers = len(roi_list)
-		results = []
-		trackers = []
+		frame, trackers, results = locate.runDetection(frame, detection_object)
 		output = mp.Queue()
-		for r in range(ntrackers):
-			trck = cv2.TrackerMIL_create()
-			x0,y0,x1,y1 = tuple(roi_list[r].astype(int))
-
-			if x1-x0<=500 and y1-y0<=500:
-				try:
-					trck.init(frame, (x0,y0,x1-x0,y1-y0))
-					trackers.append(trck)
-					results.append((x0,y0,x1-x0,y1-y0))
-				except:
-					print("Error Encountered")
-					continue
-
 	else:
-		threads = [threading.Thread(target=SingleTracker, args=(trck, frame, output,)) for trck in trackers]
-		for t in threads:
-			t.start()
-		for t in threads:
-			t.join()
-		results = [output.get() for t in threads]
-		for x in trackers:
-			del x
-
-		for nbox in results:
-			p1 = (int(nbox[0]), int(nbox[1]))
-			p2 = (int(nbox[0]+nbox[2]), int(nbox[1]+nbox[3]))
-			cv2.rectangle(frame, p1, p2, (0,0,255), 2,1)
-			# print([p1,p2])
-		# frame = cv2_image
+		frame, results = locate.parallelTracking(frame, trackers, output)
 
 	output = mp.Queue()
 	thread_distance = threading.Thread(target=getDistance, args=(frame, results, output,))
@@ -118,6 +81,11 @@ while(True):
 		cv2.putText(frame, str(k)[:4]+' meters',(midpoint_x,midpoint_y+3), font, 1, (255,0,0), 7, cv2.LINE_AA)
 
 
+	if i==0:
+		previousFrame = orgFrame
+	if i>=1:
+		frame = locate.motionVectors(results, previousFrame, frame)
+		previousFrame = orgFrame
 	frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
 	cv2.imshow("Tracking", frame)
 	i+=1
