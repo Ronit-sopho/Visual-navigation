@@ -71,6 +71,7 @@ class Locator(object):
         censure = CENSURE()
         keypoints = np.array([]).reshape(-1,2)
         nkps = {}
+        arrowDict = {}
 
         for num,region in enumerate(detectedObjects):
             x0,y0,w,h = region
@@ -85,42 +86,27 @@ class Locator(object):
                 keypoints = np.append(keypoints, kps, axis=0)
             except:
                 print('Skipped ROI')
-                return nextFrame
+                return nextFrame, arrowDict
 
         # print(keypoints.shape)
+
         try:
             flow_vectors = pyramid_lucas_kanade(rgb2gray(currentFrame), rgb2gray(nextFrame), keypoints, window_size=9)
         except:
-            return nextFrame
+            return nextFrame, arrowDict
 
         counter = 0
         aggregate_vectors = np.hstack((keypoints, flow_vectors))
+
         for k in nkps.keys():
             if nkps[k] != 0:
                 vec = np.sum(aggregate_vectors[counter:counter+nkps[k],:], axis=0)
                 avgY = vec[0]/nkps[k]
                 avgX = vec[1]/nkps[k]
-                cv2.arrowedLine(nextFrame, (int(avgX), int(avgY)), (int(avgX+vec[3]), int(avgY+vec[2])), (25,32,33), 3)
+                p1 = (int(avgX), int(avgY))
+                p2 = (int(avgX+vec[3]), int(avgY+vec[2]))
+                arrowDict[k] = (p1,(int(vec[3]), int(vec[2])))
+                cv2.arrowedLine(nextFrame, p1, p2, (225,32,33), 3)
                 counter+=nkps[k]
-        # Y=0;X=0;VY=0;VX=0;R=0;counter=0
-        # for y,x,r,vy,vx in np.hstack((keypoints,flow_vectors)):
-        #     if r==R:
-        #         VY+=vy
-        #         VX+=vx
-        #         Y+=y
-        #         X+=x
-        #         counter+=1
-        #     else:
-        #         avgX = X/counter
-        #         avgY = Y/counter
-        #         cv2.arrowedLine(nextFrame, (int(avgX), int(avgY)), (int(avgX+VX),int(avgY+VY)), (25,32,33), 3)
-        #         VY=0
-        #         VX=0
-        #         X=0
-        #         Y=0
-        #         counter=0
-        #         R+=1
-        # for y,x,r,vy,vx in np.hstack((keypoints, flow_vectors)):
-        #     cv2.arrowedLine(nextFrame, (int(x),int(y)), (int(x+vx),int(y+vy)), (25,32,33), 3)
 
-        return nextFrame
+        return nextFrame, arrowDict

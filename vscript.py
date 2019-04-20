@@ -11,6 +11,7 @@ import sys, os, threading
 
 from segment import road_segmentation
 from ipmdistance import getDistance
+from navigate import safeZones
 
 tf.reset_default_graph()
 detection_object = Detector()
@@ -24,21 +25,8 @@ locate = Locator()
 # 		getFrames.append(Image.open(os.path.join(path, imgs)))
 # 	return getFrames
 
-
-# def SingleTracker(trackerObject, vid_frame, output):
-#
-# 	try:
-# 		ret, bbox = trackerObject.update(vid_frame)
-# 	except:
-# 		pass
-# 	if(ret):
-# 		output.put(bbox)
-
-# Path if frames are to be used instead of video
-# path = 'test_images/data'
-
 # Get handle for frames
-cap = cv2.VideoCapture('campusvideo2.mp4')
+cap = cv2.VideoCapture('campusvideo_part3.mp4')
 # Counter for frames
 i=0
 
@@ -56,7 +44,14 @@ while(True):
 	else:
 		frame, results = locate.parallelTracking(frame, trackers, output)
 
+	if i==0:
+		previousFrame = orgFrame
+	if i>=1:
+		frame, arrowDict = locate.motionVectors(results, previousFrame, frame)
+		previousFrame = orgFrame
+
 	output = mp.Queue()
+
 	thread_distance = threading.Thread(target=getDistance, args=(frame, results, output,))
 	thread_segment = threading.Thread(target=road_segmentation, args=(frame, output,))
 	post = [thread_distance, thread_segment]
@@ -68,10 +63,13 @@ while(True):
 
 	res = [output.get() for p in post]
 	for r in res:
-		if type(r) == type({}):
-			distance_to_objects = r
+		if type(r) == type([]):
+			distance_to_objects, correlation, M, M_inv = r
 		else:
-			frame = r
+			frame, road_mask = r
+
+	if i>=1:
+		safeZones(frame, arrowDict, distance_to_objects, correlation, road_mask, M, M_inv)
 
 	font = cv2.FONT_HERSHEY_SIMPLEX
 	for k in distance_to_objects.keys():
@@ -81,15 +79,15 @@ while(True):
 		cv2.putText(frame, str(k)[:4]+' meters',(midpoint_x,midpoint_y+3), font, 1, (255,0,0), 7, cv2.LINE_AA)
 
 
-	if i==0:
-		previousFrame = orgFrame
-	if i>=1:
-		frame = locate.motionVectors(results, previousFrame, frame)
-		previousFrame = orgFrame
+	# if i==0:
+	# 	previousFrame = orgFrame
+	# if i>=1:
+	# 	frame = locate.motionVectors(results, previousFrame, frame)
+	# 	previousFrame = orgFrame
 	frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
 	cv2.imshow("Tracking", frame)
 	i+=1
 	k = cv2.waitKey(1) & 0xff
 	if(k==27):
 		break
-	cv2.imwrite("output/frames/frame_{}.png".format(i), frame)
+	# cv2.imwrite("output/frames/frame_{}.png".format(i), frame)

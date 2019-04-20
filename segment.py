@@ -7,19 +7,24 @@ def road_segmentation(input_image, output):
     inp_img = input_image.copy()
     inp_img = cv2.cvtColor(inp_img, cv2.COLOR_BGR2RGB)
     inp_img = np.double(inp_img)
+    inp_img[:300,:] = 0
 
     # Perform illumination invariance on the Image
-    alpha = 0.05
+    alpha = 0.4
     ii_image = 0.5 + np.log(inp_img[:,:,1]) - alpha*np.log(inp_img[:,:,2]) - (1-alpha)*np.log(inp_img[:,:,0])
     ii_image = 255*ii_image
+    roi = ii_image[850:1080,500:1200]
+    roi_mean = np.mean(roi)
+    # roi_var = np.var(roi)
     # Write the intermdiate output
     cv2.imwrite('output/ii_image.jpg', ii_image)
 
     # Perform Road Segmentation by thresholding and masking the illuminaiton invariant Image
-    ret, thresh = cv2.threshold(ii_image, 120, 150, cv2.THRESH_BINARY)
+    ret, thresh = cv2.threshold(ii_image, roi_mean+10, roi_mean-10, cv2.THRESH_BINARY_INV)
     final_masked = np.uint8(thresh)
     height = final_masked.shape[0]
     width = final_masked.shape[1]
+
 
     # Erode the image and find contours to remove false positives
     kernel = np.ones((3,3), np.uint8)
@@ -41,10 +46,10 @@ def road_segmentation(input_image, output):
     final_flood = cv2.bitwise_not(final_flood)
     final_filled= cv2.bitwise_or(final_masked,final_flood)
     image = np.zeros((height, width, 3), np.uint8)
-    image[:] = (255,0,0)
+    image[:] = (0,255,0)
 
     mask = cv2.bitwise_and(image, image, mask = final_filled)
-    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
+    # mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
     # Write intermediate output
     # cv2.imwrite('mask.jpg',mask)
 
@@ -57,4 +62,4 @@ def road_segmentation(input_image, output):
     cv2.imwrite('output/res.jpg', result)
 
     # return result
-    output.put(result)
+    output.put((result,mask))

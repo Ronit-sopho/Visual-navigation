@@ -14,7 +14,7 @@ def getDistance(input_image, object_boxes, output):
 
     # define the perspective points and their mapping
     source  = np.float32([[0,H],[W,H],[0,s],[W,s]])
-    destination = np.float32([[550,H],[800,H],[0,0],[W,0]])
+    destination = np.float32([[600,H],[900,H],[0,0],[W,0]])
 
     # Get the transformation matrix
     M = cv2.getPerspectiveTransform(source, destination)
@@ -27,17 +27,19 @@ def getDistance(input_image, object_boxes, output):
 
     # dictionary containing distances
     distance = {}
+    correlation = {}
 
-    for box in object_boxes:
+    for num,box in enumerate(object_boxes):
         top_left = (int(box[0]), int(box[1]), 1)
         bottom_right = (int(box[0]+box[2]), int(box[1]+box[3]), 1)
         # print(bottom_right)
-        # bottom_left = (int(box[0]), int(box[1]+box[3]))
+        # bottom_left = ((int(avgX), int(avgY))int(box[0]), int(box[1]+box[3]))
         if bottom_right[1]>s:
             skewed_box = np.matmul(M, np.array(bottom_right))
             skewed_box = skewed_box/skewed_box[2]
             dist = ((H - skewed_box[1])/130)*3
             distance[dist] = box
+            correlation[num] = dist
 
     # return distance
-    output.put(distance)
+    output.put([distance,correlation,M,M_inv])
