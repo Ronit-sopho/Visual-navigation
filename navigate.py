@@ -41,7 +41,9 @@ def safeZones(frame, arrowDict, distances, correspondence, road_mask, M, M_inv):
         skew_inv = skew_inv[:,:2]
         skew_inv = np.ceil(skew_inv)
         skew_inv = np.array([skew_inv], dtype=np.int32)
-        cv2.fillPoly(frame, skew_inv, (0,0,255))
+        temp_img = np.zeros_like(frame)
+        cv2.fillPoly(temp_img, skew_inv, (0,0,255))
+        frame = cv2.addWeighted(frame, 1, temp_img, 0.7, 0)
 
         # bottom_left = np.array([x,y+h,1])
         # bottom_right = np.array([x+w,y+h,1])
@@ -63,3 +65,4 @@ def safeZones(frame, arrowDict, distances, correspondence, road_mask, M, M_inv):
         #     ipm_coord[1]+=90
         #     ipm_coord[0]-=50
         #
+    return frame

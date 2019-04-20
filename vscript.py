@@ -26,7 +26,7 @@ locate = Locator()
 # 	return getFrames
 
 # Get handle for frames
-cap = cv2.VideoCapture('campusvideo_part3.mp4')
+cap = cv2.VideoCapture('campusvideo.mp4')
 # Counter for frames
 i=0
 
@@ -53,7 +53,7 @@ while(True):
 	output = mp.Queue()
 
 	thread_distance = threading.Thread(target=getDistance, args=(frame, results, output,))
-	thread_segment = threading.Thread(target=road_segmentation, args=(frame, output,))
+	thread_segment = threading.Thread(target=road_segmentation, args=(frame, results, output,))
 	post = [thread_distance, thread_segment]
 
 	for p in post:
@@ -69,7 +69,7 @@ while(True):
 			frame, road_mask = r
 
 	if i>=1:
-		safeZones(frame, arrowDict, distance_to_objects, correlation, road_mask, M, M_inv)
+		frame = safeZones(frame, arrowDict, distance_to_objects, correlation, road_mask, M, M_inv)
 
 	font = cv2.FONT_HERSHEY_SIMPLEX
 	for k in distance_to_objects.keys():

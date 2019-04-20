@@ -9,6 +9,29 @@ from motion import pyramid_lucas_kanade
 
 class Locator(object):
 
+    def mergeDetectedBoxes(self, detected_objects):
+
+        nboxes = len(detected_objects)
+        intersection_list = []
+        newObjects = []
+        for i in range(nboxes-1):
+            for j in range(i+1,nboxes):
+                x01,y01,x11,y11 = tuple(detected_objects[i].astype(int))
+                x02,y02,x12,y12 = tuple(detected_objects[j].astype(int))
+
+                if x01>x12 or x02>x11:
+                    continue
+                if y01 > y12 or y02 > y11:
+                    continue
+
+                intersection_list.extend([i,j])
+                newObjects.append(np.array([min(x01,x11,x02,x12),min(y01,y11,y02,y12),max(x01,x11,x02,x12),max(y01,y11,y02,y12)]))
+        s = set(intersection_list)
+    
+        newObjects.extend([detected_objects[x] for x in range(nboxes) if x not in s])
+        return newObjects
+
+
     def runDetection(self, frame, detection_object):
 
         pilImage = Image.fromarray(frame)
@@ -24,6 +47,7 @@ class Locator(object):
                 if np.all(box>0):
                     detectedObjects.append(box)
 
+        detectedObjects = self.mergeDetectedBoxes(detectedObjects)
         ntrackers = len(detectedObjects)
         for r in range(ntrackers):
             trck = cv2.TrackerMIL_create()

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def road_segmentation(input_image, output):
+def road_segmentation(input_image, objects, output):
 
     # Create a copy of the image and reorder its array to RGB
     inp_img = input_image.copy()
@@ -45,6 +45,15 @@ def road_segmentation(input_image, output):
     cv2.floodFill(final_flood,mask,(0,0),255)
     final_flood = cv2.bitwise_not(final_flood)
     final_filled= cv2.bitwise_or(final_masked,final_flood)
+    # print(final_filled.dtype)
+    object_mask = np.full((height,width), 255, dtype=np.uint8)
+    # print(object_mask.dtype)
+    for box in objects:
+        x0,y0,w,h = box
+        object_mask[int(y0):int(y0+h), int(x0):int(x0+w)] = 0
+
+    # cv2.imwrite('output/road_images/obj.jpg',object_mask)
+    final_filled = cv2.bitwise_and(final_filled, object_mask)
     image = np.zeros((height, width, 3), np.uint8)
     image[:] = (0,255,0)
 
