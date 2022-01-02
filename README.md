@@ -1,5 +1,5 @@
 # Visual-navigation
-A Bachelor Thesis project on Navigation for Autonomous Vehicles
+Navigation for Autonomous Vehicles
 
 How to run:
 
